@@ -31,14 +31,26 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-SPDK_ROOT_DIR := $(CURDIR)/..
+SPDK_ROOT_DIR := $(CURDIR)/../..
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-DIRS-y += memory util nvme ioat bdal
+CFLAGS += $(DPDK_INC)
 
-.PHONY: all clean $(DIRS-y)
+C_SRCS = bdal.c bdal_nvme.c
 
-all: $(DIRS-y)
-clean: $(DIRS-y)
+ifeq ($(OS),Linux)
+CFLAGS += -DHAVE_LIBAIO
+C_SRCS += bdal_aio.c
+endif
 
-include $(SPDK_ROOT_DIR)/mk/spdk.subdirs.mk
+LIB = libspdk_bdal.a
+
+all : $(LIB)
+
+clean :
+	$(CLEAN_C)
+
+$(LIB) : $(OBJS)
+	$(LIB_C)
+
+include $(SPDK_ROOT_DIR)/mk/spdk.deps.mk
